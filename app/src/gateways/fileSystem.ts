@@ -1,6 +1,6 @@
 import * as recursive from 'recursive-readdir';
 import * as path from 'path';
-import * as fs from 'fs';
+import * as fs from 'graceful-fs';
 import * as md5File from 'md5-file';
 
 export class FileSystemGateway {
@@ -9,100 +9,81 @@ export class FileSystemGateway {
 
     }
 
-    public createDirectory(dirPath): Boolean {
-        let result: Boolean;
-
-        dirPath = path.join(this.basePath, dirPath);
+    public createDirectory(dirPath): Promise<Boolean> {
+        dirPath = this.formatAndBuildFullPath(dirPath);
 
         let parts = dirPath.split(path.sep);
         for (let i = 1; i <= parts.length; i++) {
             this.mkdirSync(path.join.apply(null, parts.slice(0, i)));
         }
 
-        result = true;
-
-        this.log(`createDirectory('${dirPath}') => ${result}`);
-        return result;
+        return Promise.resolve(true);
     }
 
-    public listFiles(dirPath: string): Promise<string[]> {
-        dirPath = path.join(this.basePath, dirPath);
+    public listFiles(): Promise<string[]> {
         return new Promise((fulfill, reject) => {
-            recursive(dirPath, (err: Error, files: string[]) => {
+            recursive(this.basePath, (err: Error, files: string[]) => {
                 if (err) {
                     reject(err);
-                    return;
+                } else {
+                    fulfill(files.map(x => path.relative(this.basePath, x).replace(path.sep, '/')));
                 }
-                fulfill(files.map(x => path.relative(dirPath, x)));
             });
         });
     }
 
     public getFileReadStream(filePath: string) {
-        filePath = path.join(this.basePath, filePath);
-        return fs.createReadStream(filePath);
+        filePath = this.formatAndBuildFullPath(filePath);
+        return Promise.resolve(fs.createReadStream(filePath));
     }
 
     public getFileWriteStream(filePath: string) {
-        filePath = path.join(this.basePath, filePath);
-        return fs.createWriteStream(filePath);
+        filePath = this.formatAndBuildFullPath(filePath);
+        return Promise.resolve(fs.createWriteStream(filePath));
     }
 
-    public getFileComparator(filePath: string): string {
-        filePath = path.join(this.basePath, filePath);
+    public getFileComparator(filePath: string): Promise<string> {
+        filePath = this.formatAndBuildFullPath(filePath);
 
         let result = (<any>md5File).sync(filePath);
 
-        this.log(`getFileComparator('${filePath}') => ${result}`);
-
-        return result;
+        return Promise.resolve(result);
     }
 
-    public deleteFile(filePath: string) {
-        filePath = path.join(this.basePath, filePath);
-
-        this.log(`deleteFile('${filePath}')`);
+    public deleteFile(filePath: string): Promise<Boolean> {
+        filePath = this.formatAndBuildFullPath(filePath);
         fs.unlinkSync(filePath);
+
+        return Promise.resolve(true);
     }
 
-
-    public deleteDirectory(dirPath: string) {
-        dirPath = path.join(this.basePath, dirPath);
-
-        this.log(`deleteDirectory('${dirPath}')`);
+    public deleteDirectory(dirPath: string): Promise<Boolean> {
+        dirPath = this.formatAndBuildFullPath(dirPath);
         fs.unlinkSync(dirPath);
+
+        return Promise.resolve(true);
     }
 
-    public directoryExist(dirPath: string): Boolean {
-        let result: Boolean;
-
-        dirPath = path.join(this.basePath, dirPath);
+    public directoryExist(dirPath: string): Promise<Boolean> {
+        dirPath = this.formatAndBuildFullPath(dirPath);
 
         try {
             fs.statSync(dirPath);
-            result = true;
+            return Promise.resolve(true);
         } catch (e) {
-            result = false;
+            return Promise.resolve(false);
         }
-
-        this.log(`directoryExist('${dirPath}') => ${result}`);
-        return result;
     }
 
-    public fileExist(filePath: string): Boolean {
-        let result: Boolean;
-
-        filePath = path.join(this.basePath, filePath);
+    public fileExist(filePath: string): Promise<Boolean> {
+        filePath = this.formatAndBuildFullPath(filePath);
 
         try {
             fs.statSync(filePath);
-            result = true;
+            return Promise.resolve(true);
         } catch (e) {
-            result = false;
+            return Promise.resolve(false);
         }
-
-        this.log(`fileExist('${filePath}') => ${result}`);
-        return result;
     }
 
     private mkdirSync(dirPath): Boolean {
@@ -115,12 +96,13 @@ export class FileSystemGateway {
             result = false;
         }
 
-        this.log(`mkdirSync('${dirPath}') => ${result}`);
-
         return result;
     }
 
-    private log(message: string): void {
-        console.log(message);
+    private formatAndBuildFullPath(filePath: string) {
+        filePath = path.join(this.basePath, filePath);
+        filePath = filePath.replace('/', path.sep);
+
+        return filePath;
     }
 }
