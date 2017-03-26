@@ -2,8 +2,9 @@ import * as recursive from 'recursive-readdir';
 import * as path from 'path';
 import * as fs from 'graceful-fs';
 import * as md5File from 'md5-file';
+import { Gateway } from './base';
 
-export class FileSystemGateway {
+export class FileSystemGateway implements Gateway {
 
     constructor(private basePath: string) {
 
@@ -18,6 +19,10 @@ export class FileSystemGateway {
         }
 
         return Promise.resolve(true);
+    }
+
+    public listFileObjects(): Promise<string[]> {
+        return null;
     }
 
     public listFiles(): Promise<string[]> {
@@ -84,6 +89,31 @@ export class FileSystemGateway {
         } catch (e) {
             return Promise.resolve(false);
         }
+    }
+
+    public copy(streamSrc: fs.ReadStream, streamDest: fs.WriteStream) {
+        return new Promise((fulfill, reject) => {
+
+
+            streamSrc.on('error', (err: Error) => {
+                reject(err);
+            });
+
+            streamDest.on('error', (err: Error) => {
+                reject(err);
+            });
+
+            streamSrc.on('finish', function () {
+                console.log('END SRC');
+            });
+
+            streamDest.on('finish', function () {
+                console.log('END DEST');
+                fulfill(true);
+            });
+
+            streamSrc.pipe(streamDest);
+        });
     }
 
     private mkdirSync(dirPath): Boolean {

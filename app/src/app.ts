@@ -1,10 +1,14 @@
 import { FileSystemGateway } from './gateways/fileSystem';
 import { RackspaceGateway } from './gateways/rackspace';
+import { RegistryGateway } from './gateways/registry';
+import { Gateway } from './gateways/base';
 import * as path from 'path';
 
-function sync(sourceGateway: FileSystemGateway, destinationGateway: FileSystemGateway) {
+import * as Promise from 'bluebird';
 
-    sourceGateway.listFiles().then((files: string[]) => {
+async function sync(sourceGateway: Gateway, destinationGateway: Gateway) {
+
+    sourceGateway.listFiles().then(async (files: string[]) => {
 
         log(`Retrieved ${files.length} files`);
 
@@ -12,7 +16,7 @@ function sync(sourceGateway: FileSystemGateway, destinationGateway: FileSystemGa
             let filePath = files[i];
             let directoryName = path.dirname(filePath);
 
-            destinationGateway.directoryExist(directoryName).then((directoryExistResult: Boolean) => {
+            let r = await destinationGateway.directoryExist(directoryName).then((directoryExistResult: Boolean) => {
                 if (!directoryExistResult) {
                     return destinationGateway.createDirectory(directoryName).then((createDirectoryResult: Boolean) => {
                         log(`Created directory ${directoryName}`);
@@ -36,14 +40,16 @@ function sync(sourceGateway: FileSystemGateway, destinationGateway: FileSystemGa
                         '1'
                     ]);
                 }
-            }).then((hashes: string[]) => {
+            }).then((hashes: any) => {
                 if (hashes[0] != hashes[1]) {
+                    log(`Mismatch in hash ${filePath}`);
                     return true;
                 } else {
                     return false;
                 }
             }).then((shouldCopyToDestinationResult: Boolean) => {
                 if (shouldCopyToDestinationResult) {
+                    console.log(`Queued for copying ${filePath}`);
                     return Promise.all([
                         sourceGateway.getFileReadStream(filePath),
                         destinationGateway.getFileWriteStream(filePath)
@@ -55,34 +61,43 @@ function sync(sourceGateway: FileSystemGateway, destinationGateway: FileSystemGa
                 }
             }).then((streams: any) => {
                 if (streams[0] == null || streams[1] == null) {
-
+                    log(`No streams ${filePath}`);
+                    return true;
                 } else {
                     log(`Copying file ${filePath}`);
-                    streams[0].pipe(streams[1]);
+
+                    return sourceGateway.copy(streams[0], streams[1]);
                 }
+            }).then((result: Boolean) => {
+
+                log('DONE');
                 return true;
             });
         }
     });
 
 
-    destinationGateway.listFiles().then((files: string[]) => {
-        for (let i = 0; i < files.length; i++) {
-            let filePath = files[i];
+    // destinationGateway.listFiles().then((files: string[]) => {
+    //     for (let i = 0; i < files.length; i++) {
+    //         let filePath = files[i];
 
-            sourceGateway.fileExist(filePath).then((fileExistResult: Boolean) => {
-                if (!fileExistResult) {
-                    return destinationGateway.deleteFile(filePath);
-                } else {
-                    return null;
-                }
-            }).then((result) => {
-                if (result != null) {
-                    log(`Delete file ${filePath}`);
-                }
-            });
-        }
-    });
+    //         sourceGateway.fileExist(filePath).then((fileExistResult: Boolean) => {
+    //             if (!fileExistResult) {
+    //                 return destinationGateway.deleteFile(filePath);
+    //             } else {
+    //                 return null;
+    //             }
+    //         }).then((result) => {
+    //             if (result != null) {
+    //                 log(`Delete file ${filePath}`);
+    //             }
+    //         });
+    //     }
+    // });
+
+}
+
+async function processFile(files: string[]) {
 
 }
 
@@ -90,10 +105,15 @@ function log(message: string) {
     console.log(message);
 }
 
+// let sourceGateway = new FileSystemGateway('F:/Temp/Source');
+// let destinationGateway = new FileSystemGateway('F:/Temp/Destination');
+// let destinationGatewayWithRegistry = new RegistryGateway(destinationGateway);
 
-let sourceGateway = new FileSystemGateway('C:/Temp/Test');
-let destinationGateway = new FileSystemGateway('C:/Temp/TestDIST');
 
+let sourceGateway = new RackspaceGateway('Barend.Erasmus', '', 'LON', 'LVE_WebDocuments');
+let destinationGateway = new FileSystemGateway('F:/Temp/CLOUD');
 
 sync(sourceGateway, destinationGateway);
+
+
 

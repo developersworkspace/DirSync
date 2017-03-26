@@ -1,7 +1,10 @@
 import * as path from 'path';
 import * as pkgcloud from 'pkgcloud';
+import * as fs from 'graceful-fs';
 
-export class RackspaceGateway {
+import { Gateway } from './base';
+
+export class RackspaceGateway implements Gateway {
 
     private client: any;
 
@@ -17,6 +20,23 @@ export class RackspaceGateway {
 
     public createDirectory(dirPath): Promise<Boolean> {
         return Promise.resolve(true);
+    }
+
+    public listFileObjects(): Promise<string[]> {
+        return new Promise((fulfill, reject) => {
+            this.client.getFiles(this.containerName, (err: Error, files: any[]) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    fulfill(files.filter(x => x.contentType != 'application/directory').map(x => {
+                        return {
+                            name: x.name,
+                            md5: x.etag
+                        };
+                    }));
+                }
+            });
+        });
     }
 
     public listFiles(): Promise<string[]> {
@@ -41,12 +61,14 @@ export class RackspaceGateway {
     }
 
     public getFileWriteStream(filePath: string) {
-        let stream = this.client.upload({
-            container: this.containerName,
-            remote: filePath
-        });
+        // let stream = this.client.upload({
+        //     container: this.containerName,
+        //     remote: filePath
+        // });
 
-        return Promise.resolve(stream);
+        // return Promise.resolve(stream);
+
+        return Promise.resolve(null);
     }
 
     public getFileComparator(filePath: string): Promise<string> {
@@ -64,14 +86,14 @@ export class RackspaceGateway {
 
     public deleteFile(filePath: string): Promise<Boolean> {
         return new Promise((fulfill, reject) => {
-            this.client.removeFile(this.containerName, filePath, (err: Error, result: any) => {
-                if (err) {
-                    console.log(filePath);
-                    reject(err);
-                } else {
-                    fulfill(true);
-                }
-            });
+            // this.client.removeFile(this.containerName, filePath, (err: Error, result: any) => {
+            //     if (err) {
+            //         reject(err);
+            //     } else {
+            //         fulfill(true);
+            //     }
+            // });
+            fulfill(true);
         });
     }
 
@@ -92,6 +114,31 @@ export class RackspaceGateway {
                     fulfill(true);
                 }
             });
+        });
+    }
+
+    public copy(streamSrc: fs.ReadStream, streamDest: fs.WriteStream) {
+        return new Promise((fulfill, reject) => {
+
+
+            streamSrc.on('error', (err: Error) => {
+                reject(err);
+            });
+
+            streamDest.on('error', (err: Error) => {
+                reject(err);
+            });
+
+            streamSrc.on('finish', function () {
+                console.log('END SRC');
+            });
+
+            streamDest.on('finish', function () {
+                console.log('END DEST');
+                fulfill(true);
+            });
+
+            streamSrc.pipe(streamDest);
         });
     }
 }
