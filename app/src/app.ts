@@ -110,8 +110,8 @@ function log(message: string) {
 // let destinationGatewayWithRegistry = new RegistryGateway(destinationGateway);
 
 
-let sourceGateway = new RackspaceGateway('Barend.Erasmus', '', 'LON', 'LVE_WebDocuments');
-let destinationGateway = new FileSystemGateway('F:/Temp/CLOUD');
+let sourceGateway = new RackspaceGateway('Barend.Erasmus', '', 'LON', 'LVE_PassportGrinds');
+let destinationGateway = new FileSystemGateway('D:/Temp/CLOUD');
 
 sync(sourceGateway, destinationGateway);
 
