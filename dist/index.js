@@ -9,6 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
+var fileSystem_1 = require("./gateways/fileSystem");
+exports.FileSystemGateway = fileSystem_1.FileSystemGateway;
+var rackspace_1 = require("./gateways/rackspace");
+exports.RackspaceGateway = rackspace_1.RackspaceGateway;
+var registry_1 = require("./gateways/registry");
+exports.RegistryGateway = registry_1.RegistryGateway;
 function sync(sourceGateway, destinationGateway) {
     return __awaiter(this, void 0, void 0, function* () {
         sourceGateway.listFiles().then((files) => __awaiter(this, void 0, void 0, function* () {

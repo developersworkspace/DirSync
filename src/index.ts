@@ -4,6 +4,10 @@ import { RegistryGateway } from './gateways/registry';
 import { Gateway } from './gateways/base';
 import * as path from 'path';
 
+export { FileSystemGateway } from './gateways/fileSystem';
+export { RackspaceGateway } from './gateways/rackspace';
+export { RegistryGateway } from './gateways/registry';
+
 export async function sync(sourceGateway: Gateway, destinationGateway: Gateway) {
 
     sourceGateway.listFiles().then(async (files: string[]) => {
