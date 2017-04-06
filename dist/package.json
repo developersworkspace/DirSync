@@ -1,0 +1,30 @@
+{
+  "name": "dirsync",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "gulp ts & node ./src/app.js"
+  },
+  "author": "Barend Erasmus",
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "graceful-fs": "^4.1.11",
+    "md5-file": "^3.1.1",
+    "mongodb": "^2.2.25",
+    "path": "^0.12.7",
+    "pkgcloud": "^1.4.0",
+    "recursive-readdir": "^2.1.1",
+    "typescript": "^2.1.5"
+  },
+  "devDependencies": {
+    "@types/bluebird": "^3.5.1",
+    "@types/mongodb": "^2.1.41",
+    "@types/node": "^7.0.10",
+    "gulp": "^3.9.1",
+    "gulp-clean": "^0.3.2",
+    "gulp-typescript": "^3.1.4"
+  }
+}

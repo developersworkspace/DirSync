@@ -4,9 +4,7 @@ import { RegistryGateway } from './gateways/registry';
 import { Gateway } from './gateways/base';
 import * as path from 'path';
 
-import * as Promise from 'bluebird';
-
-async function sync(sourceGateway: Gateway, destinationGateway: Gateway) {
+export async function sync(sourceGateway: Gateway, destinationGateway: Gateway) {
 
     sourceGateway.listFiles().then(async (files: string[]) => {
 
@@ -49,7 +47,7 @@ async function sync(sourceGateway: Gateway, destinationGateway: Gateway) {
                 }
             }).then((shouldCopyToDestinationResult: Boolean) => {
                 if (shouldCopyToDestinationResult) {
-                    console.log(`Queued for copying ${filePath}`);
+                   log(`Queued for copying ${filePath}`);
                     return Promise.all([
                         sourceGateway.getFileReadStream(filePath),
                         destinationGateway.getFileWriteStream(filePath)
@@ -97,23 +95,10 @@ async function sync(sourceGateway: Gateway, destinationGateway: Gateway) {
 
 }
 
-async function processFile(files: string[]) {
-
-}
-
 function log(message: string) {
     console.log(message);
 }
 
-// let sourceGateway = new FileSystemGateway('F:/Temp/Source');
-// let destinationGateway = new FileSystemGateway('F:/Temp/Destination');
-// let destinationGatewayWithRegistry = new RegistryGateway(destinationGateway);
-
-
-let sourceGateway = new RackspaceGateway('Barend.Erasmus', '', 'LON', 'LVE_PassportGrinds');
-let destinationGateway = new FileSystemGateway('D:/Temp/CLOUD');
-
-sync(sourceGateway, destinationGateway);
 
 
 

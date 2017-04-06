@@ -61,14 +61,12 @@ export class RackspaceGateway implements Gateway {
     }
 
     public getFileWriteStream(filePath: string) {
-        // let stream = this.client.upload({
-        //     container: this.containerName,
-        //     remote: filePath
-        // });
+        let stream = this.client.upload({
+            container: this.containerName,
+            remote: filePath
+        });
 
-        // return Promise.resolve(stream);
-
-        return Promise.resolve(null);
+        return Promise.resolve(stream);
     }
 
     public getFileComparator(filePath: string): Promise<string> {
@@ -86,14 +84,13 @@ export class RackspaceGateway implements Gateway {
 
     public deleteFile(filePath: string): Promise<Boolean> {
         return new Promise((fulfill, reject) => {
-            // this.client.removeFile(this.containerName, filePath, (err: Error, result: any) => {
-            //     if (err) {
-            //         reject(err);
-            //     } else {
-            //         fulfill(true);
-            //     }
-            // });
-            fulfill(true);
+            this.client.removeFile(this.containerName, filePath, (err: Error, result: any) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    fulfill(true);
+                }
+            });
         });
     }
 
@@ -130,11 +127,10 @@ export class RackspaceGateway implements Gateway {
             });
 
             streamSrc.on('finish', function () {
-                console.log('END SRC');
+                
             });
 
             streamDest.on('finish', function () {
-                console.log('END DEST');
                 fulfill(true);
             });
 

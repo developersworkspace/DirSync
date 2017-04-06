@@ -90,27 +90,6 @@ export class RegistryGateway implements Gateway {
     }
 
     public copy(streamSrc: fs.ReadStream, streamDest: fs.WriteStream) {
-        return new Promise((fulfill, reject) => {
-
-
-            streamSrc.on('error', (err: Error) => {
-                reject(err);
-            });
-
-            streamDest.on('error', (err: Error) => {
-                reject(err);
-            });
-
-            streamSrc.on('finish', function () {
-                console.log('END SRC');
-            });
-
-            streamDest.on('finish', function () {
-                console.log('END DEST');
-                fulfill(true);
-            });
-
-            streamSrc.pipe(streamDest);
-        });
+        return this.gateway.copy(streamSrc, streamDest);
     }
 }
